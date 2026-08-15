@@ -129,12 +129,14 @@
       <button id="new-btn" class="btn btn-primary" data-i18n="btnNew">🔄 New</button>
     </div>
 
-    <button id="share-btn" class="btn share-btn" data-i18n="btnShare">🔗 Copy this puzzle's link</button>
+    <div class="share-row">
+      <button id="share-btn" class="btn share-btn" data-i18n="btnShare">🔗 Copy this puzzle's link</button>
+      <button id="install-btn" class="btn install-cta" hidden aria-label="Add WangDoKu to home screen" data-i18n="btnInstall">📲 Install</button>
+    </div>
 
     <p class="hint-text" id="howto-text" role="button" tabindex="0" data-i18n="howto">Tap a cell: empty → ❌ → 🐶 → empty. Long-press / right-click to place a pup directly.</p>
 
     <div class="langbar">
-      <button id="install-btn" class="install-btn" hidden aria-label="Install WangDoKu">📲 Install</button>
       <select id="lang-select" aria-label="Language"></select>
     </div>
   </main>

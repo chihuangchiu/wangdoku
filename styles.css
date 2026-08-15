@@ -268,11 +268,19 @@ body {
   padding: 8px 12px; border-radius: 10px; border: 1px solid #c9d8ec;
   background: #fff; font-size: 14px; color: var(--ink);
 }
+/* 分享 + 加到首頁 併成一列，寬度約 2:1，整體比原本小一點 */
+.share-row { display: flex; gap: 8px; margin-top: 10px; }
 .share-btn {
-  width: 100%; margin-top: 10px; background: #eaf2fd; color: var(--accent-dark);
-  font-size: 14px; padding: 12px;
+  flex: 2; width: auto; margin: 0; background: #eaf2fd; color: var(--accent-dark);
+  font-size: 13px; padding: 9px 6px;
 }
 .share-btn:active { transform: translateY(1px) scale(0.99); }
+.install-cta {
+  flex: 1; margin: 0; padding: 9px 6px; background: var(--accent); color: #fff;
+  font-size: 13px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.install-cta[hidden] { display: none; }
+.install-cta:active { transform: translateY(1px) scale(0.98); }
 
 .hint-text {
   text-align: center; font-size: 12px; color: var(--muted); margin-top: 8px;

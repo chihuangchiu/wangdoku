@@ -669,23 +669,29 @@
   }
   let deferredPrompt = null;
   const installBtn = document.getElementById('install-btn');
-  window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault(); deferredPrompt = e;
-    if (installBtn) installBtn.hidden = false; // Android/桌面 Chrome 才會有
-  });
-  if (installBtn) installBtn.addEventListener('click', async () => {
-    if (!deferredPrompt) return;
-    deferredPrompt.prompt();
-    try { await deferredPrompt.userChoice; } catch (e) { /* ignore */ }
-    deferredPrompt = null; installBtn.hidden = true;
-    track('pwa_install_click', { from: 'langbar' });
-  });
-  window.addEventListener('appinstalled', () => track('pwa_installed'));
-
-  // 首次過關時，邀請加到主畫面（只出現一次）
   const isStandalone = () =>
     window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
   const isIOS = () => /iphone|ipad|ipod/i.test(navigator.userAgent);
+  // 顯示「加到首頁」按鈕：可程式化安裝（Android/桌面 Chrome）或 iOS Safari（給指引）；已安裝則隱藏
+  function refreshInstallBtn() {
+    if (!installBtn) return;
+    installBtn.hidden = isStandalone() ? true : !(deferredPrompt || isIOS());
+  }
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault(); deferredPrompt = e; refreshInstallBtn();
+  });
+  if (installBtn) installBtn.addEventListener('click', async () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      try { await deferredPrompt.userChoice; } catch (e) { /* ignore */ }
+      deferredPrompt = null; refreshInstallBtn();
+      track('pwa_install_click', { from: 'toolbar' });
+    } else if (isIOS()) {
+      window.alert(t('installIos')); // iOS 無法程式化安裝，改給「分享 → 加入主畫面」指引
+      track('pwa_install_click', { from: 'ios_hint' });
+    }
+  });
+  window.addEventListener('appinstalled', () => { refreshInstallBtn(); track('pwa_installed'); });
   function maybeShowInstall() {
     const box = document.getElementById('win-install');
     if (!box) return;
@@ -707,12 +713,13 @@
     try { await deferredPrompt.userChoice; } catch (e) { /* ignore */ }
     deferredPrompt = null;
     document.getElementById('win-install').hidden = true;
-    if (installBtn) installBtn.hidden = true;
+    refreshInstallBtn();
     track('pwa_install_click', { from: 'win' });
   });
 
   // 起始：偵測瀏覽器語言 → 首次教學＋同意 → 載入分享題或產生新題
   window.I18N.init();
+  refreshInstallBtn(); // iOS Safari / 已安裝狀態，一開始就決定按鈕是否顯示
   if (!loadFromURL()) newGame();
   initConsent();
 })();
