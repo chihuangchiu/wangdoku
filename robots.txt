@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+
+# 部署後把下面網域換成你的實際網域
+Sitemap: https://wangdoku.netlify.app/sitemap.xml

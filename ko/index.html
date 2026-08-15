@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<!-- ⚠️ 此檔為模板，請勿手動編輯輸出頁。改這裡後執行： node build-i18n.js -->
+<html lang="ko" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+
+  <!-- Google Analytics 4（Consent Mode v2：預設拒絕，同意後才存 cookie）-->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-GWRWXJKD8V"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
+    gtag('consent', 'default', {
+      ad_storage: 'denied',
+      ad_user_data: 'denied',
+      ad_personalization: 'denied',
+      analytics_storage: 'denied',
+      wait_for_update: 500
+    });
+    gtag('config', 'G-GWRWXJKD8V');
+  </script>
+
+  <!-- 本頁語言（i18n 會優先採用；?lang= 仍可覆蓋）-->
+  <script>window.__WD_LANG = "ko";</script>
+
+  <!-- 僅根頁：偵測偏好非英文者，極早期導向對應語言頁（Googlebot/英文者留在根頁）。?lang= 與 ?p= 皆保留 -->
+  <script>
+  (function () {
+    if (window.__WD_LANG !== null) return;                 // 只在根頁作用
+    var params = new URLSearchParams(location.search);
+    if (params.get('lang')) return;                         // 明確指定語言就不轉
+    var known = ['zh-Hant', 'zh-Hans', 'ja', 'ko', 'es', 'fr', 'de', 'pt', 'ru', 'id', 'vi', 'th', 'hi', 'tr', 'it', 'pl', 'ar'];
+    var pick = null;
+    try { var s = localStorage.getItem('pupdoku_lang'); if (s) pick = s; } catch (e) { /* ignore */ }
+    if (!pick) {
+      var list = (navigator.languages && navigator.languages.length) ? navigator.languages : [navigator.language || 'en'];
+      for (var i = 0; i < list.length; i++) {
+        var low = String(list[i]).toLowerCase();
+        if (low.indexOf('zh') === 0) { pick = (low.indexOf('hant') >= 0 || low.indexOf('tw') >= 0 || low.indexOf('hk') >= 0 || low.indexOf('mo') >= 0) ? 'zh-Hant' : 'zh-Hans'; break; }
+        var two = low.slice(0, 2);
+        if (two === 'en') { pick = 'en'; break; }
+        if (known.indexOf(two) >= 0) { pick = two; break; }
+      }
+    }
+    if (pick && pick !== 'en' && known.indexOf(pick) >= 0) {
+      location.replace('/' + pick + '/' + location.search + location.hash);
+    }
+  })();
+  </script>
+
+  <title>WangDoKu — 무료 강아지 로직 퍼즐</title>
+  <meta name="description" content="무료 강아지 테마 로직 퍼즐 WangDoKu. 각 색상·각 행·각 열에 강아지 한 마리씩, 서로 붙으면 안 됩니다. Pawdoku·Meowdoku의 귀여운 대안——똑똑한 힌트, 4단계 난이도, 18개 언어, 설치 불필요." />
+  <link rel="canonical" href="https://wangdoku.netlify.app/ko/" />
+  <meta name="theme-color" content="#eaf4ff" />
+
+  <!-- PWA：加入主畫面 / 離線 -->
+  <link rel="manifest" href="/manifest.webmanifest" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="WangDoKu" />
+
+  <!-- 多語言 hreflang：各語言各自的靜態頁 -->
+  <link rel="alternate" hreflang="x-default" href="https://wangdoku.netlify.app/" />
+  <link rel="alternate" hreflang="en" href="https://wangdoku.netlify.app/" />
+  <link rel="alternate" hreflang="zh-Hant" href="https://wangdoku.netlify.app/zh-Hant/" />
+  <link rel="alternate" hreflang="zh-Hans" href="https://wangdoku.netlify.app/zh-Hans/" />
+  <link rel="alternate" hreflang="ja" href="https://wangdoku.netlify.app/ja/" />
+  <link rel="alternate" hreflang="ko" href="https://wangdoku.netlify.app/ko/" />
+  <link rel="alternate" hreflang="es" href="https://wangdoku.netlify.app/es/" />
+  <link rel="alternate" hreflang="fr" href="https://wangdoku.netlify.app/fr/" />
+  <link rel="alternate" hreflang="de" href="https://wangdoku.netlify.app/de/" />
+  <link rel="alternate" hreflang="pt" href="https://wangdoku.netlify.app/pt/" />
+  <link rel="alternate" hreflang="ru" href="https://wangdoku.netlify.app/ru/" />
+  <link rel="alternate" hreflang="id" href="https://wangdoku.netlify.app/id/" />
+  <link rel="alternate" hreflang="vi" href="https://wangdoku.netlify.app/vi/" />
+  <link rel="alternate" hreflang="th" href="https://wangdoku.netlify.app/th/" />
+  <link rel="alternate" hreflang="hi" href="https://wangdoku.netlify.app/hi/" />
+  <link rel="alternate" hreflang="tr" href="https://wangdoku.netlify.app/tr/" />
+  <link rel="alternate" hreflang="it" href="https://wangdoku.netlify.app/it/" />
+  <link rel="alternate" hreflang="pl" href="https://wangdoku.netlify.app/pl/" />
+  <link rel="alternate" hreflang="ar" href="https://wangdoku.netlify.app/ar/" />
+
+  <!-- Open Graph（Facebook 等）-->
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="WangDoKu" />
+  <meta property="og:title" content="WangDoKu — 무료 강아지 로직 퍼즐" />
+  <meta property="og:description" content="각 색상·행·열에 강아지 한 마리씩, 두 마리가 맞닿으면 안 됩니다. 무료이고 귀여운 Pawdoku·Meowdoku 대안." />
+  <meta property="og:url" content="https://wangdoku.netlify.app/ko/" />
+  <meta property="og:locale" content="ko_KR" />
+  <meta property="og:image" content="https://wangdoku.netlify.app/og-image.jpg" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+
+  <!-- Twitter / X Card -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="WangDoKu — 무료 강아지 로직 퍼즐" />
+  <meta name="twitter:description" content="Pawdoku·Meowdoku 스타일의 무료 귀여운 강아지 로직 퍼즐. 브라우저에서 바로 즐기세요." />
+  <meta name="twitter:image" content="https://wangdoku.netlify.app/og-image.jpg" />
+
+  <!-- 結構化資料：讓 Google / AI 答案引擎理解這是什麼 -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "WangDoKu",
+    "alternateName": "WangDoKu Dog Logic Puzzle",
+    "url": "https://wangdoku.netlify.app/ko/",
+    "image": "https://wangdoku.netlify.app/og-image.jpg",
+    "applicationCategory": "GameApplication",
+    "genre": [
+      "Logic puzzle",
+      "Star Battle",
+      "Queens puzzle"
+    ],
+    "operatingSystem": "Any (web browser)",
+    "inLanguage": [
+      "en",
+      "zh-Hant",
+      "zh-Hans",
+      "ja",
+      "ko",
+      "es",
+      "fr",
+      "de",
+      "pt",
+      "ru",
+      "id",
+      "vi",
+      "th",
+      "hi",
+      "tr",
+      "it",
+      "pl",
+      "ar"
+    ],
+    "isAccessibleForFree": true,
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    },
+    "description": "무료 강아지 테마 로직 퍼즐 WangDoKu. 각 색상·각 행·각 열에 강아지 한 마리씩, 서로 붙으면 안 됩니다. Pawdoku·Meowdoku의 귀여운 대안——똑똑한 힌트, 4단계 난이도, 18개 언어, 설치 불필요."
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "WangDoKu란?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "각 색상·행·열에 강아지를 한 마리씩 놓고 두 마리가 맞닿지 않게 하는 무료 강아지 테마 로직 퍼즐입니다. Star Battle 및 Queens 퍼즐과 같은 장르입니다."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "WangDoKu는 어떻게 하나요?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "칸을 탭하면 “빈칸·✕·강아지”로 바뀝니다. 각 색상 구역·행·열에 정확히 한 마리를 놓고 두 강아지가 절대 맞닿지 않게 하세요(대각선도 불가). 막히면 힌트 버튼으로 가장 쉬운 다음 수를 확인하세요."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "WangDoKu는 Pawdoku나 Meowdoku와 비슷한가요?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "네 — 같은 스타일의 무료 대안이지만 강아지 테마입니다. 똑똑한 힌트, 4단계 난이도, 공유 링크, 18개 언어를 갖췄습니다. WangDoKu는 독립 게임이며 Pawdoku·Meowdoku와 제휴 관계가 없습니다."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "무료인가요? 계정이 필요한가요?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "WangDoKu는 완전 무료이며 계정도, 다운로드도 필요 없습니다 — 휴대폰이나 PC의 최신 브라우저에서 실행됩니다."
+        }
+      }
+    ]
+  }
+  </script>
+
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <main class="app">
+    <header class="topbar" id="brand" role="button" tabindex="0" title="About & tutorial">
+      <div class="brand">
+        <span class="brand-dog">🐶</span>
+        <div>
+          <h1>WangDoKu</h1>
+          <p class="tagline" data-i18n="tagline">Doggo logic puzzle</p>
+        </div>
+      </div>
+    </header>
+
+    <section class="rules">
+      <div class="rule rule-a" role="button" tabindex="0" data-page="1" data-i18n-html="rule1">1 pup<br />per color</div>
+      <div class="rule rule-b" role="button" tabindex="0" data-page="2" data-i18n-html="rule2">1 pup per<br />row &amp; column</div>
+      <div class="rule rule-c" role="button" tabindex="0" data-page="3" data-i18n-html="rule3">Pups can't<br />touch</div>
+    </section>
+
+    <div class="difficulty" id="difficulty">
+      <button class="diff-btn" data-diff="0" data-i18n="diffBeginner">Beginner</button>
+      <button class="diff-btn is-active" data-diff="1" data-i18n="diffEasy">Easy</button>
+      <button class="diff-btn" data-diff="2" data-i18n="diffMedium">Medium</button>
+      <button class="diff-btn" data-diff="3" data-i18n="diffHard">Hard</button>
+    </div>
+
+    <div class="stats">
+      <div class="stat"><b id="stat-timer">00:00</b><small data-i18n="statTimer">This puzzle</small></div>
+      <div class="stat"><b id="stat-today">0</b><small data-i18n="statToday">Today</small></div>
+      <div class="stat"><b id="stat-total">0</b><small data-i18n="statTotal">All time</small></div>
+      <span id="diff-badge" class="diff-badge">Easy</span>
+    </div>
+
+    <div id="board" class="board"></div>
+
+    <p id="status" class="status">…</p>
+
+    <div class="toolbar">
+      <button id="hint-btn" class="btn" data-i18n="btnHint">💡 Hint</button>
+      <button id="undo-btn" class="btn" data-i18n="btnUndo">↩︎ Undo</button>
+      <button id="clear-btn" class="btn" data-i18n="btnClear">🧹 Clear</button>
+      <button id="new-btn" class="btn btn-primary" data-i18n="btnNew">🔄 New</button>
+    </div>
+
+    <button id="share-btn" class="btn share-btn" data-i18n="btnShare">🔗 Copy this puzzle's link</button>
+
+    <p class="hint-text" id="howto-text" role="button" tabindex="0" data-i18n="howto">Tap a cell: empty → ❌ → 🐶 → empty. Long-press / right-click to place a pup directly.</p>
+
+    <div class="langbar">
+      <button id="install-btn" class="install-btn" hidden aria-label="Install WangDoKu">📲 Install</button>
+      <select id="lang-select" aria-label="Language"></select>
+    </div>
+  </main>
+
+  <div id="win-overlay" class="win-overlay">
+    <div class="win-card">
+      <div class="win-dog">🎉🐶</div>
+      <h2 id="win-text">過關！</h2>
+      <div class="win-share">
+        <span class="win-share-label" data-i18n="winShareLabel">Share this puzzle, challenge a friend:</span>
+        <div class="win-share-btns">
+          <button id="share-x" class="social-btn x" title="Share on X">𝕏</button>
+          <button id="share-fb" class="social-btn fb" title="Share on Facebook">f</button>
+          <button id="share-copy" class="social-btn copy" title="Copy link">🔗</button>
+        </div>
+      </div>
+      <div id="win-install" class="win-install" hidden>
+        <span class="win-install-title" data-i18n="installTitle">Add WangDoKu to your home screen 🐶</span>
+        <button id="win-install-btn" class="win-install-btn" hidden>📲</button>
+        <span id="win-install-ios" class="win-install-ios" data-i18n="installIos" hidden>Tap Share, then “Add to Home Screen”.</span>
+      </div>
+      <button id="win-next" class="btn btn-primary" data-i18n="winNext">Next puzzle →</button>
+    </div>
+  </div>
+
+  <div id="about-overlay" class="modal-overlay">
+    <div class="modal-card">
+      <button id="about-close" class="modal-close" aria-label="關閉">×</button>
+      <div id="about-body" class="about-body"></div>
+      <div class="about-nav">
+        <button id="about-prev" class="nav-btn" aria-label="上一頁">‹</button>
+        <div id="about-dots" class="dots"></div>
+        <button id="about-next" class="nav-btn" aria-label="下一頁">›</button>
+      </div>
+      <div id="modal-consent" class="modal-consent" hidden>
+        <span class="consent-text" data-i18n="consentText">This site uses cookies for anonymous analytics. If you don’t agree, please don’t use it.</span>
+        <div class="consent-btns">
+          <button id="consent-accept" class="consent-btn primary">OK</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer class="seo">
+    <article>
+      <h2>WangDoKu — 무료 강아지 로직 퍼즐</h2>
+      <p>WangDoKu는 브라우저에서 바로 즐기는 무료 강아지 테마 로직 퍼즐입니다. 휴대폰이든 PC든, 설치할 것이 없습니다. Star Battle 및 Queens 퍼즐과 같은 계열이며, Pawdoku·Meowdoku 같은 게임의 강아지를 사랑하는 귀여운 대안입니다.</p>
+      <h2>플레이 방법</h2>
+      <p>각 보드는 여러 색상 구역으로 나뉩니다. 목표는 강아지(🐶)를 다음 조건으로 놓는 것입니다:</p>
+      <ul>
+        <li>각 색상 구역에 강아지 정확히 한 마리;</li>
+        <li>각 행과 각 열에 강아지 정확히 한 마리;</li>
+        <li>두 강아지는 맞닿지 않기 — 대각선도 안 됩니다.</li>
+      </ul>
+      <p>칸을 탭하면 “빈칸 → ✕(비어 있음 표시) → 강아지” 순으로 바뀝니다. 막혔나요? 똑똑한 힌트 버튼이 가장 쉬운 다음 논리적 수와 그 이유를 알려줍니다.</p>
+      <h2>특징</h2>
+      <ul>
+        <li>유일해가 보장되는 무제한 퍼즐</li>
+        <li>4단계 난이도 — 입문·쉬움·보통·어려움 — 필요한 추론 수준으로 분류</li>
+        <li>정답만 주지 않고 논리를 가르쳐 주는 똑똑한 힌트</li>
+        <li>공유 가능한 퍼즐 링크로 친구와 같은 보드에 도전</li>
+        <li>18개 언어 지원, 타이머와 오늘/전체 해결 통계까지</li>
+      </ul>
+      <h2>자주 묻는 질문</h2>
+      <h3>WangDoKu란?</h3>
+      <p>각 색상·행·열에 강아지를 한 마리씩 놓고 두 마리가 맞닿지 않게 하는 무료 강아지 테마 로직 퍼즐입니다. Star Battle 및 Queens 퍼즐과 같은 장르입니다.</p>
+      <h3>WangDoKu는 어떻게 하나요?</h3>
+      <p>칸을 탭하면 “빈칸·✕·강아지”로 바뀝니다. 각 색상 구역·행·열에 정확히 한 마리를 놓고 두 강아지가 절대 맞닿지 않게 하세요(대각선도 불가). 막히면 힌트 버튼으로 가장 쉬운 다음 수를 확인하세요.</p>
+      <h3>WangDoKu는 Pawdoku나 Meowdoku와 비슷한가요?</h3>
+      <p>네 — 같은 스타일의 무료 대안이지만 강아지 테마입니다. 똑똑한 힌트, 4단계 난이도, 공유 링크, 18개 언어를 갖췄습니다. WangDoKu는 독립 게임이며 Pawdoku·Meowdoku와 제휴 관계가 없습니다.</p>
+      <h3>무료인가요? 계정이 필요한가요?</h3>
+      <p>WangDoKu는 완전 무료이며 계정도, 다운로드도 필요 없습니다 — 휴대폰이나 PC의 최신 브라우저에서 실행됩니다.</p>
+    </article>
+  </footer>
+
+  <script src="/js/i18n.js"></script>
+  <script src="/js/solver.js"></script>
+  <script src="/js/difficulty.js"></script>
+  <script src="/js/generator.js"></script>
+  <script src="/js/game.js"></script>
+  <script src="/js/main.js"></script>
+</body>
+</html>
