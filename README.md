@@ -1,5 +1,7 @@
 # WangDoKu 🐶 — a free dog logic puzzle
 
+![WangDoKu — a doggo logic puzzle](og-image.jpg)
+
 A cute, dog-themed logic puzzle you play right in the browser — the same family as
 **Star Battle** and the LinkedIn **Queens** puzzle. Pure HTML/CSS/JS, no build step to
 play, no dependencies, no tracking beyond optional analytics.

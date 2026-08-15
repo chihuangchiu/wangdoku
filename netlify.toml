@@ -1,0 +1,5 @@
+# Netlify 設定：連結 GitHub 後，push 到 main 會自動 build + 部署。
+# build 會重新產生 index.html / <lang>/index.html 與 sitemap.xml（見 build-i18n.js）。
+[build]
+  command = "node build-i18n.js"
+  publish = "."
