@@ -59,6 +59,19 @@
   let timerId = null;
   let lastElapsed = 0; // 最近一次過關的用時（給社群分享文字用）
 
+  // === 1 vs 1 對戰模式 ===
+  const VS_TARGET = 4;                     // 先放對幾隻狗算贏
+  const AI_TICK_MS = 3000;                 // 電腦每步間隔（每 3 秒一個動作）
+  const AI_THINK_MIN = 2, AI_THINK_MAX = 4; // 放每隻狗前「暗中思考/畫叉」的 tick 數
+  const AI_N = 7, AI_BUCKET = 2;           // 7×7 困難
+  let mode = 'single';                     // 'single' | 'vs'
+  let ownerAt = null;                      // Map "r,c" -> 'me' | 'ai'（誰放的狗）
+  let aiSolver = null;                     // 電腦私有大腦（js/ai.js）
+  let aiTimer = null;
+  let myScore = 0, aiScore = 0;
+  let vsOver = false;
+  let aiPending = null, aiThinkBudget = 0; // 電腦決定好、正在「思考」還沒放到盤上的狗
+
   // === 統計（存 localStorage，依難度分開）===
   const STATS_KEY = 'pupdoku_stats_v1';
   function loadStats() {
@@ -280,7 +293,11 @@
         const v = game.grid[r][c];
         if (v === DOG) {
           cell.textContent = '🐶';
-          if (conflicts.has(`${r},${c}`)) cell.classList.add('conflict');
+          if (mode === 'vs' && ownerAt) {
+            const who = ownerAt.get(`${r},${c}`);
+            if (who === 'ai') cell.classList.add('dog-ai');
+            else if (who === 'me') cell.classList.add('dog-me');
+          } else if (conflicts.has(`${r},${c}`)) cell.classList.add('conflict');
         } else if (v === MARK) {
           cell.textContent = '❌';
           cell.classList.add('mark');
@@ -303,6 +320,7 @@
   }
 
   function onCellClick(r, c, right) {
+    if (mode === 'vs') { onVsClick(r, c, right); return; }
     if (!game.won) ensureTimer(); // 第一個動作開始計時
     if (right) game.setDog(r, c);
     else game.cycle(r, c);
@@ -332,6 +350,8 @@
     });
 
     setStatus(() => t('statusWin', { time: fmt(elapsed) }), 'good');
+    const dogEl = document.querySelector('.win-dog');
+    if (dogEl) dogEl.textContent = '🎉🐶'; // 從 1v1 回來後可能被改過，復原
     el.winText.innerHTML =
       `${t('winTitle', { time: fmt(elapsed) })}<br><small>${t('winSubtitle', { today: st.todayCount, total: st.solved })}</small>`;
     el.winNext.textContent = t('winNext');
@@ -371,7 +391,121 @@
 
   function nextPuzzle() {
     el.win.classList.remove('show');
-    newGame();
+    if (mode === 'vs') startVsMatch(); else newGame();
+  }
+
+  // ===== 1 vs 1 對戰 =====
+  function setVsUI(on) { document.body.classList.toggle('vs-mode', on); }
+  function updateVsScore() {
+    const me = document.getElementById('vs-me-score');
+    const ai = document.getElementById('vs-ai-score');
+    if (me) me.textContent = myScore;
+    if (ai) ai.textContent = aiScore;
+  }
+  function stopAiTimer() { if (aiTimer) { clearInterval(aiTimer); aiTimer = null; } }
+  function startAiTimer() { stopAiTimer(); aiTimer = setInterval(aiStep, AI_TICK_MS); }
+
+  function startVsMatch() {
+    mode = 'vs';
+    stopTimer(); stopAiTimer();
+    vsOver = false; myScore = 0; aiScore = 0;
+    ownerAt = new Map(); aiPending = null; aiThinkBudget = 0;
+    el.win.classList.remove('show');
+    clearShareParam();
+    setVsUI(true);
+    document.querySelectorAll('.mode-tab').forEach((x) => x.classList.toggle('is-active', x.dataset.mode === 'vs'));
+    updateVsScore();
+    el.board.innerHTML = '<div class="board-loading">🎲</div>';
+    setStatus(() => t('vsStart'), 'hint');
+    setTimeout(() => {
+      const puzzle = window.PupdokuGenerator.generateByDifficulty(AI_N, AI_BUCKET);
+      game = new Game(puzzle);
+      aiSolver = new window.PupdokuAI.AiSolver(puzzle);
+      revealAnim = true;
+      render();
+      startAiTimer();
+      track('vs_start', {});
+    }, 20);
+  }
+
+  function exitVs() {
+    stopAiTimer();
+    mode = 'single'; vsOver = false; ownerAt = null; aiSolver = null; aiPending = null;
+    el.win.classList.remove('show');
+    setVsUI(false);
+    document.querySelectorAll('.mode-tab').forEach((x) => x.classList.toggle('is-active', x.dataset.mode === 'single'));
+    newGame(); // 回到單人：開一局新的
+  }
+
+  // 玩家在 1v1 點格：單點循環 空→❌→🐶；右鍵/長按直接放狗。放下 🐶 即判定對錯。
+  function onVsClick(r, c, right) {
+    if (vsOver || !game) return;
+    if (game.grid[r][c] === DOG) return; // 已占的狗格不可再動
+    const before = game.grid[r][c];
+    if (right) game.grid[r][c] = DOG;
+    else game.grid[r][c] = before === EMPTY ? MARK : before === MARK ? DOG : EMPTY;
+    if (game.grid[r][c] === DOG) {
+      if (game.solution[r] === c) { // 放對
+        ownerAt.set(`${r},${c}`, 'me');
+        aiSolver.commitExternal(r, c); // 同步給電腦大腦：這格被你占了
+        myScore++;
+        render(); updateVsScore();
+        if (myScore >= VS_TARGET) { endVs('you'); return; }
+        setStatus(() => t('vsGood', { you: myScore, ai: aiScore }), 'good');
+      } else { // 放錯 → 立刻輸
+        render();
+        endVs('wrong', { r, c });
+      }
+    } else {
+      render(); // ❌ 或清空（你自己的輔助標記）
+    }
+  }
+
+  function placeAiDog(r, c) {
+    game.grid[r][c] = DOG;
+    ownerAt.set(`${r},${c}`, 'ai');
+    aiScore++;
+    render(); updateVsScore();
+    const cell = el.board.querySelector(`.cell[data-r="${r}"][data-c="${c}"]`);
+    if (cell) { void cell.offsetWidth; cell.classList.add('dog-pop'); }
+    if (aiScore >= VS_TARGET) endVs('ai');
+    else setStatus(() => t('vsGood', { you: myScore, ai: aiScore }), 'hint');
+  }
+
+  // 每 3 秒一步：先「暗中思考(私有畫叉)」幾個 tick，再把想好的狗放到共享盤
+  function aiStep() {
+    if (mode !== 'vs' || vsOver || !aiSolver) return;
+    if (aiPending) {
+      if (aiThinkBudget > 0) { aiThinkBudget--; return; }
+      const { r, c } = aiPending; aiPending = null;
+      if (game.grid[r][c] !== DOG) placeAiDog(r, c); // 若你已先占，就放棄這隻、下一步再算
+      return;
+    }
+    const mv = aiSolver.step();
+    if (!mv) return;
+    if (mv.type === 'place') { // 決定好一隻狗：先思考幾個 tick 再放
+      aiPending = { r: mv.r, c: mv.c };
+      aiThinkBudget = AI_THINK_MIN + Math.floor(Math.random() * (AI_THINK_MAX - AI_THINK_MIN + 1));
+    }
+    // mv.type === 'mark'：私有畫叉，畫面上不動
+  }
+
+  function endVs(result, info) {
+    vsOver = true;
+    stopAiTimer();
+    if (result === 'wrong' && info) {
+      const cell = el.board.querySelector(`.cell[data-r="${info.r}"][data-c="${info.c}"]`);
+      if (cell) cell.classList.add('dog-wrong');
+    }
+    const titleKey = result === 'you' ? 'vsYouWin' : result === 'ai' ? 'vsAiWin' : 'vsWrongDog';
+    const emoji = result === 'you' ? '🎉🐶' : result === 'ai' ? '🤖' : '🙈';
+    const dogEl = document.querySelector('.win-dog');
+    if (dogEl) dogEl.textContent = emoji;
+    el.winText.innerHTML = `${t(titleKey)}<br><small>${t('vsScoreLine', { you: myScore, ai: aiScore })}</small>`;
+    el.winNext.textContent = t('vsRematch');
+    track('vs_end', { result: result, my_score: myScore, ai_score: aiScore });
+    if (result === 'you') celebrate();
+    setTimeout(() => el.win.classList.add('show'), result === 'you' ? 900 : 350);
   }
 
   // 事件綁定
@@ -571,6 +705,14 @@
 
   el.diffBtns.forEach((b) => {
     b.addEventListener('click', () => setDifficulty(+b.dataset.diff));
+  });
+  // 標題附近的模式切換：單人 ⇄ 1 vs 1
+  document.querySelectorAll('.mode-tab').forEach((b) => {
+    b.addEventListener('click', () => {
+      const m = b.dataset.mode;
+      if (m === mode) return;
+      if (m === 'vs') startVsMatch(); else exitVs();
+    });
   });
   el.winNext.addEventListener('click', nextPuzzle);
 

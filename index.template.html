@@ -98,6 +98,11 @@
       </div>
     </header>
 
+    <div class="mode-tabs" id="mode-tabs">
+      <button class="mode-tab is-active" data-mode="single" data-i18n="modeSingle">Solo</button>
+      <button class="mode-tab" data-mode="vs" data-i18n="mode1v1">⚔️ 1 vs 1</button>
+    </div>
+
     <section class="rules">
       <div class="rule rule-a" role="button" tabindex="0" data-page="1" data-i18n-html="rule1">1 pup<br />per color</div>
       <div class="rule rule-b" role="button" tabindex="0" data-page="2" data-i18n-html="rule2">1 pup per<br />row &amp; column</div>
@@ -116,6 +121,11 @@
       <div class="stat"><b id="stat-today">0</b><small data-i18n="statToday">Today</small></div>
       <div class="stat"><b id="stat-total">0</b><small data-i18n="statTotal">All time</small></div>
       <span id="diff-badge" class="diff-badge">Easy</span>
+    </div>
+
+    <div class="vs-score" id="vs-score">
+      <div class="vs-chip vs-chip-me"><b><span id="vs-me-score">0</span>/4</b><small data-i18n="vsYou">You</small></div>
+      <div class="vs-chip vs-chip-ai"><b><span id="vs-ai-score">0</span>/4</b><small data-i18n="vsAI">Computer</small></div>
     </div>
 
     <div id="board" class="board"></div>
@@ -189,6 +199,7 @@
   <script src="/js/difficulty.js"></script>
   <script src="/js/generator.js"></script>
   <script src="/js/game.js"></script>
+  <script src="/js/ai.js"></script>
   <script src="/js/main.js"></script>
 </body>
 </html>
