@@ -73,6 +73,15 @@
   let aiPending = null, aiThinkBudget = 0; // 電腦決定好、正在「思考」還沒放到盤上的狗
   let vsStartTime = 0, vsClockId = null;   // 對戰計時（開賽倒數結束才開始）
   let vsCountingDown = false;              // 3/2/1 倒數中：擋玩家點擊、電腦也還沒動
+  // 點擊節奏：同一格連點要在 1 秒內，才會從 ❌ 進到 🐶（避免誤放狗）。單點=標 ❌、快速連點=放狗
+  const DBL_TAP_MS = 1000;
+  let lastTap = { key: null, time: 0 };
+  function isQuickTap(r, c) {
+    const key = r + ',' + c, now = Date.now();
+    const quick = (lastTap.key === key && now - lastTap.time < DBL_TAP_MS);
+    lastTap = { key, time: now };
+    return quick;
+  }
 
   // === 統計（存 localStorage，依難度分開）===
   const STATS_KEY = 'pupdoku_stats_v1';
@@ -326,7 +335,12 @@
     if (mode === 'vs') { onVsClick(r, c, right); return; }
     if (!game.won) ensureTimer(); // 第一個動作開始計時
     if (right) game.setDog(r, c);
-    else game.cycle(r, c);
+    else {
+      const quick = isQuickTap(r, c);
+      // 在 ❌ 上「慢慢」再點一下 → 不放狗、改清空；要放狗請快速連點兩下（或長按/右鍵）
+      if (game.grid[r][c] === MARK && !quick) game.clearCell(r, c);
+      else game.cycle(r, c);
+    }
 
     if (game.checkWin()) {
       render();
@@ -405,6 +419,11 @@
     if (me) me.textContent = myScore;
     if (ai) ai.textContent = aiScore;
   }
+  // 電腦「思考中」：Computer 晶片下方的紅線左右滑動
+  function setAiThinking(on) {
+    const chip = document.querySelector('.vs-chip-ai');
+    if (chip) chip.classList.toggle('thinking', on);
+  }
   function stopAiTimer() { if (aiTimer) { clearInterval(aiTimer); aiTimer = null; } }
   function startAiTimer() { stopAiTimer(); aiTimer = setInterval(aiStep, AI_TICK_MS); }
 
@@ -481,18 +500,20 @@
       render(); updateVsScore();
       // 倒數 3/2/1/Go! 結束後才開始計時與電腦下棋
       vsCountingDown = true;
+      setAiThinking(false);
       runCountdown(() => {
         vsCountingDown = false;
         if (vsOver || mode !== 'vs') return;
         startVsClock();
         startAiTimer();
+        setAiThinking(true); // 開跑後電腦開始「思考」
       });
       track('vs_start', { forced: forced.length });
     }, 20);
   }
 
   function exitVs() {
-    stopAiTimer(); stopVsClock();
+    stopAiTimer(); stopVsClock(); setAiThinking(false);
     mode = 'single'; vsOver = false; vsCountingDown = false; ownerAt = null; aiSolver = null; aiPending = null;
     const cd = document.getElementById('vs-countdown'); if (cd) cd.hidden = true;
     el.win.classList.remove('show');
@@ -506,8 +527,11 @@
     if (vsOver || vsCountingDown || !game) return;
     if (game.grid[r][c] === DOG) return; // 已占的狗格不可再動
     const before = game.grid[r][c];
+    const quick = isQuickTap(r, c);
     if (right) game.grid[r][c] = DOG;
-    else game.grid[r][c] = before === EMPTY ? MARK : before === MARK ? DOG : EMPTY;
+    else if (before === EMPTY) game.grid[r][c] = MARK;
+    else if (before === MARK) game.grid[r][c] = quick ? DOG : EMPTY; // 慢速再點不放狗，改清空
+    else game.grid[r][c] = EMPTY;
     if (game.grid[r][c] === DOG) {
       if (game.solution[r] === c) { // 放對
         ownerAt.set(`${r},${c}`, 'me');
@@ -556,7 +580,7 @@
 
   function endVs(result, info) {
     vsOver = true;
-    stopAiTimer(); stopVsClock();
+    stopAiTimer(); stopVsClock(); setAiThinking(false);
     if (result === 'wrong' && info) {
       const cell = el.board.querySelector(`.cell[data-r="${info.r}"][data-c="${info.c}"]`);
       if (cell) cell.classList.add('dog-wrong');
@@ -778,6 +802,8 @@
       if (m === 'vs') startVsMatch(); else exitVs();
     });
   });
+  const vsRestartBtn = document.getElementById('vs-restart');
+  if (vsRestartBtn) vsRestartBtn.addEventListener('click', () => startVsMatch());
   el.winNext.addEventListener('click', nextPuzzle);
 
   el.shareBtn.addEventListener('click', async () => {
