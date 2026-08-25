@@ -61,16 +61,18 @@
 
   // === 1 vs 1 對戰模式 ===
   const VS_TARGET = 4;                     // 先放對幾隻狗算贏
-  const AI_TICK_MS = 3000;                 // 電腦每步間隔（每 3 秒一個動作）
+  const AI_TICK_MS = 2000;                 // 電腦每步間隔（每 2 秒一個動作）
   const AI_THINK_MIN = 2, AI_THINK_MAX = 4; // 放每隻狗前「暗中思考/畫叉」的 tick 數
   const AI_N = 7, AI_BUCKET = 2;           // 7×7 困難
   let mode = 'single';                     // 'single' | 'vs'
-  let ownerAt = null;                      // Map "r,c" -> 'me' | 'ai'（誰放的狗）
+  let ownerAt = null;                      // Map "r,c" -> 'me' | 'ai' | 'both'（誰放的狗）
   let aiSolver = null;                     // 電腦私有大腦（js/ai.js）
   let aiTimer = null;
   let myScore = 0, aiScore = 0;
   let vsOver = false;
   let aiPending = null, aiThinkBudget = 0; // 電腦決定好、正在「思考」還沒放到盤上的狗
+  let vsStartTime = 0, vsClockId = null;   // 對戰計時（開賽倒數結束才開始）
+  let vsCountingDown = false;              // 3/2/1 倒數中：擋玩家點擊、電腦也還沒動
 
   // === 統計（存 localStorage，依難度分開）===
   const STATS_KEY = 'pupdoku_stats_v1';
@@ -297,6 +299,7 @@
             const who = ownerAt.get(`${r},${c}`);
             if (who === 'ai') cell.classList.add('dog-ai');
             else if (who === 'me') cell.classList.add('dog-me');
+            else if (who === 'both') cell.classList.add('dog-both');
           } else if (conflicts.has(`${r},${c}`)) cell.classList.add('conflict');
         } else if (v === MARK) {
           cell.textContent = '❌';
@@ -405,32 +408,93 @@
   function stopAiTimer() { if (aiTimer) { clearInterval(aiTimer); aiTimer = null; } }
   function startAiTimer() { stopAiTimer(); aiTimer = setInterval(aiStep, AI_TICK_MS); }
 
+  // 對戰計時（開賽倒數結束才開始）
+  function updateVsClock() {
+    const eln = document.getElementById('vs-time');
+    if (eln) eln.textContent = fmt(vsStartTime ? Date.now() - vsStartTime : 0);
+  }
+  function startVsClock() { vsStartTime = Date.now(); updateVsClock(); vsClockId = setInterval(updateVsClock, 1000); }
+  function stopVsClock() { if (vsClockId) { clearInterval(vsClockId); vsClockId = null; } }
+
+  // 3 / 2 / 1 / Go! 開賽倒數
+  function runCountdown(done) {
+    const overlay = document.getElementById('vs-countdown');
+    if (!overlay) { done(); return; }
+    const seq = ['3', '2', '1', t('vsGo')];
+    let i = 0;
+    const tick = () => {
+      if (vsOver || mode !== 'vs') { overlay.hidden = true; return; } // 中途離開就停
+      if (i >= seq.length) { overlay.hidden = true; done(); return; }
+      overlay.hidden = false;
+      overlay.textContent = seq[i];
+      overlay.classList.remove('pop'); void overlay.offsetWidth; overlay.classList.add('pop');
+      const last = (i === seq.length - 1);
+      i++;
+      setTimeout(tick, last ? 600 : 800);
+    };
+    tick();
+  }
+
+  // 找出「單格顏色區塊」——那格的狗一開始就 100% 確定
+  function singleCellDogs(puzzle) {
+    const n = puzzle.n, count = {}, cellOf = {};
+    for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) {
+      const k = puzzle.regions[r][c];
+      count[k] = (count[k] || 0) + 1; cellOf[k] = [r, c];
+    }
+    const out = [];
+    for (const k in count) if (count[k] === 1) out.push(cellOf[k]);
+    return out;
+  }
+
   function startVsMatch() {
     mode = 'vs';
-    stopTimer(); stopAiTimer();
-    vsOver = false; myScore = 0; aiScore = 0;
+    stopTimer(); stopAiTimer(); stopVsClock();
+    vsOver = false; myScore = 0; aiScore = 0; vsStartTime = 0;
     ownerAt = new Map(); aiPending = null; aiThinkBudget = 0;
+    vsCountingDown = false;
     el.win.classList.remove('show');
     clearShareParam();
     setVsUI(true);
     document.querySelectorAll('.mode-tab').forEach((x) => x.classList.toggle('is-active', x.dataset.mode === 'vs'));
-    updateVsScore();
+    updateVsScore(); updateVsClock();
     el.board.innerHTML = '<div class="board-loading">🎲</div>';
     setStatus(() => t('vsStart'), 'hint');
     setTimeout(() => {
-      const puzzle = window.PupdokuGenerator.generateByDifficulty(AI_N, AI_BUCKET);
+      // 出題：避免「單格狗」多到直接湊滿分（極少見）
+      let puzzle, forced;
+      for (let tries = 0; tries < 40; tries++) {
+        puzzle = window.PupdokuGenerator.generateByDifficulty(AI_N, AI_BUCKET);
+        forced = singleCellDogs(puzzle);
+        if (forced.length < VS_TARGET) break;
+      }
       game = new Game(puzzle);
       aiSolver = new window.PupdokuAI.AiSolver(puzzle);
+      // 單格狗：一開始就放上，雙方都得分
+      for (const [r, c] of forced) {
+        game.grid[r][c] = DOG;
+        ownerAt.set(`${r},${c}`, 'both');
+        aiSolver.commitExternal(r, c);
+        myScore++; aiScore++;
+      }
       revealAnim = true;
-      render();
-      startAiTimer();
-      track('vs_start', {});
+      render(); updateVsScore();
+      // 倒數 3/2/1/Go! 結束後才開始計時與電腦下棋
+      vsCountingDown = true;
+      runCountdown(() => {
+        vsCountingDown = false;
+        if (vsOver || mode !== 'vs') return;
+        startVsClock();
+        startAiTimer();
+      });
+      track('vs_start', { forced: forced.length });
     }, 20);
   }
 
   function exitVs() {
-    stopAiTimer();
-    mode = 'single'; vsOver = false; ownerAt = null; aiSolver = null; aiPending = null;
+    stopAiTimer(); stopVsClock();
+    mode = 'single'; vsOver = false; vsCountingDown = false; ownerAt = null; aiSolver = null; aiPending = null;
+    const cd = document.getElementById('vs-countdown'); if (cd) cd.hidden = true;
     el.win.classList.remove('show');
     setVsUI(false);
     document.querySelectorAll('.mode-tab').forEach((x) => x.classList.toggle('is-active', x.dataset.mode === 'single'));
@@ -439,7 +503,7 @@
 
   // 玩家在 1v1 點格：單點循環 空→❌→🐶；右鍵/長按直接放狗。放下 🐶 即判定對錯。
   function onVsClick(r, c, right) {
-    if (vsOver || !game) return;
+    if (vsOver || vsCountingDown || !game) return;
     if (game.grid[r][c] === DOG) return; // 已占的狗格不可再動
     const before = game.grid[r][c];
     if (right) game.grid[r][c] = DOG;
@@ -474,7 +538,7 @@
 
   // 每 3 秒一步：先「暗中思考(私有畫叉)」幾個 tick，再把想好的狗放到共享盤
   function aiStep() {
-    if (mode !== 'vs' || vsOver || !aiSolver) return;
+    if (mode !== 'vs' || vsOver || vsCountingDown || !aiSolver) return;
     if (aiPending) {
       if (aiThinkBudget > 0) { aiThinkBudget--; return; }
       const { r, c } = aiPending; aiPending = null;
@@ -492,7 +556,7 @@
 
   function endVs(result, info) {
     vsOver = true;
-    stopAiTimer();
+    stopAiTimer(); stopVsClock();
     if (result === 'wrong' && info) {
       const cell = el.board.querySelector(`.cell[data-r="${info.r}"][data-c="${info.c}"]`);
       if (cell) cell.classList.add('dog-wrong');

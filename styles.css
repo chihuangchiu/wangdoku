@@ -324,10 +324,31 @@ body.vs-mode .win-share,
 body.vs-mode #win-install { display: none; }
 
 /* 誰放的狗：藍環=你、紅環=電腦；放錯的狗高亮 */
-.cell.dog-me { box-shadow: inset 0 0 0 3px #4d9de0; }
-.cell.dog-ai { box-shadow: inset 0 0 0 3px #ff5d73; }
+.cell.dog-me { box-shadow: inset 0 0 0 3px #4d9de0; }        /* 你的狗：藍環 */
+.cell.dog-ai { box-shadow: inset 0 0 0 3px #ff5d73; }        /* 電腦的狗：紅環 */
+.cell.dog-both { box-shadow: inset 0 0 0 3px #f0a500; }      /* 單格狗（雙方都得分）：金環 */
 .cell.dog-wrong { box-shadow: inset 0 0 0 3px #d8354c; background: #ffd5db !important; }
 .cell.dog-pop { animation: cellReveal 0.34s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+
+/* 兩隊分數中間：已過的時間 */
+.vs-time { align-self: center; text-align: center; min-width: 58px; }
+.vs-time b { display: block; font-size: 18px; line-height: 1.1; color: var(--ink); font-variant-numeric: tabular-nums; }
+.vs-time small { font-size: 12px; color: var(--muted); }
+
+/* 開賽 3 / 2 / 1 / Go! 倒數 */
+.vs-countdown {
+  position: fixed; inset: 0; z-index: 45; pointer-events: none;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 96px; font-weight: 800; color: var(--accent);
+  text-shadow: 0 6px 24px rgba(0, 0, 0, 0.18);
+}
+.vs-countdown[hidden] { display: none; }
+.vs-countdown.pop { animation: cdPop 0.55s ease; }
+@keyframes cdPop {
+  0% { transform: scale(0.4); opacity: 0; }
+  40% { transform: scale(1.15); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
 
 /* SEO 內容區（給搜尋引擎 / AI 讀，同時對玩家也是有用的說明）*/
 .seo {
