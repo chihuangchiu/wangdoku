@@ -739,6 +739,7 @@
     { mini: TOUCH, bad: TOUCH, title: 'aboutRule3Title', body: 'aboutRule3' },
     { hero: '👆', title: 'aboutHowtoTitle', body: 'aboutHowto' },
     { hero: '💡', title: 'aboutHintTitle', body: 'aboutHint' },
+    { hero: '⚔️', title: 'aboutVsTitle', body: 'aboutVs' },
     { hero: '🐾', title: 'aboutCreditsTitle', body: 'aboutCredits' },
   ];
   let aboutPage = 0;
