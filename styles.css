@@ -363,6 +363,25 @@ body.vs-mode #win-install { display: none; }
   100% { transform: scale(1); opacity: 1; }
 }
 
+/* Online / nearby room picker */
+#match-picker[hidden] { display: none; }
+.match-card { text-align: center; max-width: 360px; }
+.match-icon { font-size: 42px; line-height: 1; }
+.match-card h2 { margin: 6px 0 2px; }
+.match-card > p { color: var(--muted); margin: 4px 0 14px; }
+.match-choice { display: grid; grid-template-columns: 34px 1fr; align-items: center; width: 100%; margin: 8px 0; padding: 12px; border: 1px solid #dce7f4; border-radius: 14px; background: #fff; color: var(--ink); text-align: left; cursor: pointer; font-size: 22px; }
+.match-choice:hover { border-color: var(--accent); background: #f3f8ff; }
+.match-choice b { font-size: 15px; }
+.match-choice small { grid-column: 2; font-size: 12px; color: var(--muted); margin-top: 1px; }
+.match-join { display: flex; gap: 7px; border-top: 1px solid #e7edf5; margin-top: 13px; padding-top: 14px; }
+.match-join input { min-width: 0; flex: 1; border: 1px solid #cfdceb; border-radius: 10px; padding: 9px; font-weight: 800; letter-spacing: 1.5px; text-align: center; text-transform: uppercase; }
+.match-message { min-height: 18px; color: var(--accent-dark) !important; font-size: 12px; }
+.invite-card { text-align: center; max-width: 330px; }
+.invite-card h2 { margin: 6px 0 2px; }
+.invite-card p { color: var(--muted); margin: 5px 0 12px; }
+.invite-qr { display: block; width: 190px; height: 190px; margin: 0 auto 10px; border-radius: 12px; background: #fff; }
+.invite-code { display: block; margin: 4px 0 14px; color: var(--accent-dark); font-size: 26px; letter-spacing: 4px; }
+
 /* SEO 內容區（給搜尋引擎 / AI 讀，同時對玩家也是有用的說明）*/
 .seo {
   max-width: 680px; margin: 8px auto 40px; padding: 0 20px;

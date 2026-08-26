@@ -298,6 +298,32 @@
 
   <div id="vs-countdown" class="vs-countdown" hidden></div>
 
+  <div id="match-picker" class="modal-overlay" hidden>
+    <div class="modal-card match-card">
+      <button id="match-close" class="modal-close" aria-label="Close">×</button>
+      <div class="match-icon">⚔️</div>
+      <h2>1 vs 1</h2>
+      <p>Choose an opponent.</p>
+      <button class="match-choice" data-match="ai">🤖 <b>vs AI</b><small>Play offline against the computer</small></button>
+      <button class="match-choice" data-match="internet">🌐 <b>vs Internet</b><small>Create a room and invite anyone</small></button>
+      <button class="match-choice" data-match="nearby">📱 <b>Nearby</b><small>Share a room code with someone beside you</small></button>
+      <div class="match-join"><input id="match-code" maxlength="6" placeholder="ROOM CODE" autocapitalize="characters" /><button id="match-join" class="btn btn-primary">Join</button></div>
+      <p id="match-message" class="match-message"></p>
+    </div>
+  </div>
+
+  <div id="nearby-invite" class="modal-overlay" hidden>
+    <div class="modal-card invite-card">
+      <button id="invite-close" class="modal-close" aria-label="Close">×</button>
+      <div class="match-icon">📱</div>
+      <h2>Nearby match</h2>
+      <p>Ask your friend to scan this code.</p>
+      <img id="invite-qr" class="invite-qr" alt="QR code to join this WangDoKu match" />
+      <b id="invite-code" class="invite-code"></b>
+      <button id="invite-share" class="btn btn-primary">Share invite</button>
+    </div>
+  </div>
+
   <footer class="seo">
     <article>
       <h2>WangDoKu — un rompicapo di logica con cagnolini gratis</h2>
@@ -336,6 +362,7 @@
   <script src="/js/generator.js"></script>
   <script src="/js/game.js"></script>
   <script src="/js/ai.js"></script>
+  <script src="/js/multiplayer.js"></script>
   <script src="/js/main.js"></script>
 </body>
 </html>

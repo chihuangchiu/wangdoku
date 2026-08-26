@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<!-- ⚠️ 此檔為模板，請勿手動編輯輸出頁。改這裡後執行： node build-i18n.js -->
+<html lang="hi" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+
+  <!-- Google Analytics 4（Consent Mode v2：預設拒絕，同意後才存 cookie）-->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-GWRWXJKD8V"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
+    gtag('consent', 'default', {
+      ad_storage: 'denied',
+      ad_user_data: 'denied',
+      ad_personalization: 'denied',
+      analytics_storage: 'denied',
+      wait_for_update: 500
+    });
+    gtag('config', 'G-GWRWXJKD8V');
+  </script>
+
+  <!-- 本頁語言（i18n 會優先採用；?lang= 仍可覆蓋）-->
+  <script>window.__WD_LANG = "hi";</script>
+
+  <!-- 僅根頁：偵測偏好非英文者，極早期導向對應語言頁（Googlebot/英文者留在根頁）。?lang= 與 ?p= 皆保留 -->
+  <script>
+  (function () {
+    if (window.__WD_LANG !== null) return;                 // 只在根頁作用
+    var params = new URLSearchParams(location.search);
+    if (params.get('lang')) return;                         // 明確指定語言就不轉
+    var known = ['zh-Hant', 'zh-Hans', 'ja', 'ko', 'es', 'fr', 'de', 'pt', 'ru', 'id', 'vi', 'th', 'hi', 'tr', 'it', 'pl', 'ar'];
+    var pick = null;
+    try { var s = localStorage.getItem('pupdoku_lang'); if (s) pick = s; } catch (e) { /* ignore */ }
+    if (!pick) {
+      var list = (navigator.languages && navigator.languages.length) ? navigator.languages : [navigator.language || 'en'];
+      for (var i = 0; i < list.length; i++) {
+        var low = String(list[i]).toLowerCase();
+        if (low.indexOf('zh') === 0) { pick = (low.indexOf('hant') >= 0 || low.indexOf('tw') >= 0 || low.indexOf('hk') >= 0 || low.indexOf('mo') >= 0) ? 'zh-Hant' : 'zh-Hans'; break; }
+        var two = low.slice(0, 2);
+        if (two === 'en') { pick = 'en'; break; }
+        if (known.indexOf(two) >= 0) { pick = two; break; }
+      }
+    }
+    if (pick && pick !== 'en' && known.indexOf(pick) >= 0) {
+      location.replace('/' + pick + '/' + location.search + location.hash);
+    }
+  })();
+  </script>
+
+  <title>WangDoKu — मुफ़्त कुत्तों वाली लॉजिक पहेली</title>
+  <meta name="description" content="WangDoKu खेलें, एक मुफ़्त कुत्ते-थीम वाली लॉजिक पहेली: हर रंग, पंक्ति और स्तंभ में एक पिल्ला, कोई एक-दूसरे को न छुए। Pawdoku और Meowdoku का प्यारा विकल्प — स्मार्ट संकेत, 4 कठिनाइयाँ, 18 भाषाएँ, बिना इंस्टॉल।" />
+  <link rel="canonical" href="https://wangdoku.netlify.app/hi/" />
+  <meta name="theme-color" content="#eaf4ff" />
+
+  <!-- PWA：加入主畫面 / 離線 -->
+  <link rel="manifest" href="/manifest.webmanifest" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="WangDoKu" />
+
+  <!-- 多語言 hreflang：各語言各自的靜態頁 -->
+  <link rel="alternate" hreflang="x-default" href="https://wangdoku.netlify.app/" />
+  <link rel="alternate" hreflang="en" href="https://wangdoku.netlify.app/" />
+  <link rel="alternate" hreflang="zh-Hant" href="https://wangdoku.netlify.app/zh-Hant/" />
+  <link rel="alternate" hreflang="zh-Hans" href="https://wangdoku.netlify.app/zh-Hans/" />
+  <link rel="alternate" hreflang="ja" href="https://wangdoku.netlify.app/ja/" />
+  <link rel="alternate" hreflang="ko" href="https://wangdoku.netlify.app/ko/" />
+  <link rel="alternate" hreflang="es" href="https://wangdoku.netlify.app/es/" />
+  <link rel="alternate" hreflang="fr" href="https://wangdoku.netlify.app/fr/" />
+  <link rel="alternate" hreflang="de" href="https://wangdoku.netlify.app/de/" />
+  <link rel="alternate" hreflang="pt" href="https://wangdoku.netlify.app/pt/" />
+  <link rel="alternate" hreflang="ru" href="https://wangdoku.netlify.app/ru/" />
+  <link rel="alternate" hreflang="id" href="https://wangdoku.netlify.app/id/" />
+  <link rel="alternate" hreflang="vi" href="https://wangdoku.netlify.app/vi/" />
+  <link rel="alternate" hreflang="th" href="https://wangdoku.netlify.app/th/" />
+  <link rel="alternate" hreflang="hi" href="https://wangdoku.netlify.app/hi/" />
+  <link rel="alternate" hreflang="tr" href="https://wangdoku.netlify.app/tr/" />
+  <link rel="alternate" hreflang="it" href="https://wangdoku.netlify.app/it/" />
+  <link rel="alternate" hreflang="pl" href="https://wangdoku.netlify.app/pl/" />
+  <link rel="alternate" hreflang="ar" href="https://wangdoku.netlify.app/ar/" />
+
+  <!-- Open Graph（Facebook 等）-->
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="WangDoKu" />
+  <meta property="og:title" content="WangDoKu — मुफ़्त कुत्तों वाली लॉजिक पहेली" />
+  <meta property="og:description" content="हर रंग, पंक्ति और स्तंभ में एक पिल्ला — और कोई दो एक-दूसरे को न छुएँ। Pawdoku और Meowdoku का मुफ़्त, प्यारा विकल्प।" />
+  <meta property="og:url" content="https://wangdoku.netlify.app/hi/" />
+  <meta property="og:locale" content="hi_IN" />
+  <meta property="og:image" content="https://wangdoku.netlify.app/og-image.jpg" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+
+  <!-- Twitter / X Card -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="WangDoKu — मुफ़्त कुत्तों वाली लॉजिक पहेली" />
+  <meta name="twitter:description" content="Pawdoku और Meowdoku की शैली में मुफ़्त, प्यारी कुत्तों वाली लॉजिक पहेली। ब्राउज़र में खेलें।" />
+  <meta name="twitter:image" content="https://wangdoku.netlify.app/og-image.jpg" />
+
+  <!-- 結構化資料：讓 Google / AI 答案引擎理解這是什麼 -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "WangDoKu",
+    "alternateName": "WangDoKu Dog Logic Puzzle",
+    "url": "https://wangdoku.netlify.app/hi/",
+    "image": "https://wangdoku.netlify.app/og-image.jpg",
+    "applicationCategory": "GameApplication",
+    "genre": [
+      "Logic puzzle",
+      "Star Battle",
+      "Queens puzzle"
+    ],
+    "operatingSystem": "Any (web browser)",
+    "inLanguage": [
+      "en",
+      "zh-Hant",
+      "zh-Hans",
+      "ja",
+      "ko",
+      "es",
+      "fr",
+      "de",
+      "pt",
+      "ru",
+      "id",
+      "vi",
+      "th",
+      "hi",
+      "tr",
+      "it",
+      "pl",
+      "ar"
+    ],
+    "isAccessibleForFree": true,
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    },
+    "description": "WangDoKu खेलें, एक मुफ़्त कुत्ते-थीम वाली लॉजिक पहेली: हर रंग, पंक्ति और स्तंभ में एक पिल्ला, कोई एक-दूसरे को न छुए। Pawdoku और Meowdoku का प्यारा विकल्प — स्मार्ट संकेत, 4 कठिनाइयाँ, 18 भाषाएँ, बिना इंस्टॉल।"
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "WangDoKu क्या है?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "एक मुफ़्त कुत्ते-थीम वाली लॉजिक पहेली जिसमें आप हर रंग, पंक्ति और स्तंभ में एक पिल्ला रखते हैं, और कोई दो एक-दूसरे को नहीं छूते। यह Star Battle और Queens पहेली की ही शैली की है।"
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "WangDoKu कैसे खेलते हैं?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "किसी खाने को टैप करने पर वह खाली, क्रॉस और पिल्ला के बीच बदलता है। हर रंग क्षेत्र, पंक्ति और स्तंभ में ठीक एक पिल्ला रखें और कभी दो पिल्लों को छूने न दें (तिरछे भी नहीं)। सबसे आसान अगले कदम के लिए संकेत बटन दबाएँ।"
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "क्या WangDoKu, Pawdoku या Meowdoku जैसा है?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "हाँ — यह उसी शैली का मुफ़्त विकल्प है, पर कुत्ते-थीम वाला, स्मार्ट संकेतों, चार कठिनाइयों, साझा लिंक और 18 भाषाओं के साथ। WangDoKu एक स्वतंत्र खेल है और Pawdoku या Meowdoku से संबद्ध नहीं है।"
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "क्या यह मुफ़्त है? क्या खाता चाहिए?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "WangDoKu पूरी तरह मुफ़्त है, न खाता चाहिए और न डाउनलोड — यह फ़ोन या कंप्यूटर के किसी भी आधुनिक ब्राउज़र में चलता है।"
+        }
+      }
+    ]
+  }
+  </script>
+
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <main class="app">
+    <header class="topbar" id="brand" role="button" tabindex="0" title="About & tutorial">
+      <div class="brand">
+        <span class="brand-dog">🐶</span>
+        <div>
+          <h1>WangDoKu</h1>
+          <p class="tagline" data-i18n="tagline">Doggo logic puzzle</p>
+        </div>
+      </div>
+    </header>
+
+    <div class="mode-tabs" id="mode-tabs">
+      <button class="mode-tab is-active" data-mode="single" data-i18n="modeSingle">Solo</button>
+      <button class="mode-tab" data-mode="vs" data-i18n="mode1v1">⚔️ 1 vs 1</button>
+    </div>
+
+    <section class="rules">
+      <div class="rule rule-a" role="button" tabindex="0" data-page="1" data-i18n-html="rule1">1 pup<br />per color</div>
+      <div class="rule rule-b" role="button" tabindex="0" data-page="2" data-i18n-html="rule2">1 pup per<br />row &amp; column</div>
+      <div class="rule rule-c" role="button" tabindex="0" data-page="3" data-i18n-html="rule3">Pups can't<br />touch</div>
+    </section>
+
+    <div class="difficulty" id="difficulty">
+      <button class="diff-btn" data-diff="0" data-i18n="diffBeginner">Beginner</button>
+      <button class="diff-btn is-active" data-diff="1" data-i18n="diffEasy">Easy</button>
+      <button class="diff-btn" data-diff="2" data-i18n="diffMedium">Medium</button>
+      <button class="diff-btn" data-diff="3" data-i18n="diffHard">Hard</button>
+    </div>
+
+    <div class="stats">
+      <div class="stat"><b id="stat-timer">00:00</b><small data-i18n="statTimer">This puzzle</small></div>
+      <div class="stat"><b id="stat-today">0</b><small data-i18n="statToday">Today</small></div>
+      <div class="stat"><b id="stat-total">0</b><small data-i18n="statTotal">All time</small></div>
+      <span id="diff-badge" class="diff-badge">Easy</span>
+    </div>
+
+    <div class="vs-score" id="vs-score">
+      <div class="vs-chip vs-chip-me"><b><span id="vs-me-score">0</span>/4</b><small data-i18n="vsYou">You</small></div>
+      <div class="vs-time"><b id="vs-time">00:00</b><small>⏱</small></div>
+      <div class="vs-chip vs-chip-ai"><b><span id="vs-ai-score">0</span>/4</b><small data-i18n="vsAI">Computer</small></div>
+    </div>
+
+    <div id="board" class="board"></div>
+
+    <p id="status" class="status">…</p>
+
+    <div class="vs-controls" id="vs-controls">
+      <button id="vs-restart" class="btn btn-primary" data-i18n="vsRematch">🔄 Rematch</button>
+    </div>
+
+    <div class="toolbar">
+      <button id="hint-btn" class="btn" data-i18n="btnHint">💡 Hint</button>
+      <button id="undo-btn" class="btn" data-i18n="btnUndo">↩︎ Undo</button>
+      <button id="clear-btn" class="btn" data-i18n="btnClear">🧹 Clear</button>
+      <button id="new-btn" class="btn btn-primary" data-i18n="btnNew">🔄 New</button>
+    </div>
+
+    <div class="share-row">
+      <button id="share-btn" class="btn share-btn" data-i18n="btnShare">🔗 Copy this puzzle's link</button>
+      <button id="install-btn" class="btn install-cta" hidden aria-label="Add WangDoKu to home screen" data-i18n="btnInstall">📲 Install</button>
+    </div>
+
+    <p class="hint-text" id="howto-text" role="button" tabindex="0" data-i18n="howto">Tap a cell: empty → ❌ → 🐶 → empty. Long-press / right-click to place a pup directly.</p>
+
+    <div class="langbar">
+      <select id="lang-select" aria-label="Language"></select>
+    </div>
+  </main>
+
+  <div id="win-overlay" class="win-overlay">
+    <div class="win-card">
+      <div class="win-dog">🎉🐶</div>
+      <h2 id="win-text">過關！</h2>
+      <div class="win-share">
+        <span class="win-share-label" data-i18n="winShareLabel">Share this puzzle, challenge a friend:</span>
+        <div class="win-share-btns">
+          <button id="share-x" class="social-btn x" title="Share on X">𝕏</button>
+          <button id="share-fb" class="social-btn fb" title="Share on Facebook">f</button>
+          <button id="share-copy" class="social-btn copy" title="Copy link">🔗</button>
+        </div>
+      </div>
+      <div id="win-install" class="win-install" hidden>
+        <span class="win-install-title" data-i18n="installTitle">Add WangDoKu to your home screen 🐶</span>
+        <button id="win-install-btn" class="win-install-btn" hidden>📲</button>
+        <span id="win-install-ios" class="win-install-ios" data-i18n="installIos" hidden>Tap Share, then “Add to Home Screen”.</span>
+      </div>
+      <button id="win-next" class="btn btn-primary" data-i18n="winNext">Next puzzle →</button>
+    </div>
+  </div>
+
+  <div id="about-overlay" class="modal-overlay">
+    <div class="modal-card">
+      <button id="about-close" class="modal-close" aria-label="關閉">×</button>
+      <div id="about-body" class="about-body"></div>
+      <div class="about-nav">
+        <button id="about-prev" class="nav-btn" aria-label="上一頁">‹</button>
+        <div id="about-dots" class="dots"></div>
+        <button id="about-next" class="nav-btn" aria-label="下一頁">›</button>
+      </div>
+      <div id="modal-consent" class="modal-consent" hidden>
+        <span class="consent-text" data-i18n="consentText">This site uses cookies for anonymous analytics. If you don’t agree, please don’t use it.</span>
+        <div class="consent-btns">
+          <button id="consent-accept" class="consent-btn primary">OK</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="vs-countdown" class="vs-countdown" hidden></div>
+
+  <div id="match-picker" class="modal-overlay" hidden>
+    <div class="modal-card match-card">
+      <button id="match-close" class="modal-close" aria-label="Close">×</button>
+      <div class="match-icon">⚔️</div>
+      <h2>1 vs 1</h2>
+      <p>Choose an opponent.</p>
+      <button class="match-choice" data-match="ai">🤖 <b>vs AI</b><small>Play offline against the computer</small></button>
+      <button class="match-choice" data-match="internet">🌐 <b>vs Internet</b><small>Create a room and invite anyone</small></button>
+      <button class="match-choice" data-match="nearby">📱 <b>Nearby</b><small>Share a room code with someone beside you</small></button>
+      <div class="match-join"><input id="match-code" maxlength="6" placeholder="ROOM CODE" autocapitalize="characters" /><button id="match-join" class="btn btn-primary">Join</button></div>
+      <p id="match-message" class="match-message"></p>
+    </div>
+  </div>
+
+  <div id="nearby-invite" class="modal-overlay" hidden>
+    <div class="modal-card invite-card">
+      <button id="invite-close" class="modal-close" aria-label="Close">×</button>
+      <div class="match-icon">📱</div>
+      <h2>Nearby match</h2>
+      <p>Ask your friend to scan this code.</p>
+      <img id="invite-qr" class="invite-qr" alt="QR code to join this WangDoKu match" />
+      <b id="invite-code" class="invite-code"></b>
+      <button id="invite-share" class="btn btn-primary">Share invite</button>
+    </div>
+  </div>
+
+  <footer class="seo">
+    <article>
+      <h2>WangDoKu — एक मुफ़्त कुत्तों वाली लॉजिक पहेली</h2>
+      <p>WangDoKu एक मुफ़्त, कुत्ते-थीम वाली लॉजिक पहेली है जिसे आप सीधे अपने ब्राउज़र में खेल सकते हैं — फ़ोन या कंप्यूटर पर, बिना कुछ इंस्टॉल किए। यह Star Battle और Queens पहेली के ही परिवार की है, और Pawdoku तथा Meowdoku जैसे खेलों का एक प्यारा, कुत्ता-प्रेमी विकल्प है।</p>
+      <h2>कैसे खेलें</h2>
+      <p>हर बोर्ड रंगीन क्षेत्रों में बँटा होता है। आपका लक्ष्य एक पिल्ला (🐶) इस तरह रखना है कि:</p>
+      <ul>
+        <li>हर रंग क्षेत्र में ठीक एक पिल्ला हो;</li>
+        <li>हर पंक्ति और हर स्तंभ में ठीक एक पिल्ला हो;</li>
+        <li>कोई दो पिल्ले एक-दूसरे को न छुएँ — तिरछे भी नहीं।</li>
+      </ul>
+      <p>किसी खाने को टैप करने पर वह खाली → क्रॉस (खाली के रूप में चिह्नित) → पिल्ला के बीच बदलता है। अटक गए? स्मार्ट संकेत बटन सबसे आसान अगला तार्किक कदम दिखाता है और कारण बताता है।</p>
+      <h2>विशेषताएँ</h2>
+      <ul>
+        <li>अनगिनत पहेलियाँ, हर एक का एकमात्र हल सुनिश्चित</li>
+        <li>चार कठिनाई स्तर — शुरुआती, आसान, मध्यम और कठिन — आवश्यक तर्क के अनुसार</li>
+        <li>स्मार्ट संकेत जो सिर्फ़ उत्तर देने के बजाय तर्क सिखाते हैं</li>
+        <li>साझा करने योग्य पहेली लिंक, ताकि दोस्त वही बोर्ड खेल सकें</li>
+        <li>18 भाषाओं में खेलें, साथ में टाइमर और आज / कुल हल किए आँकड़े</li>
+      </ul>
+      <h2>अक्सर पूछे जाने वाले प्रश्न</h2>
+      <h3>WangDoKu क्या है?</h3>
+      <p>एक मुफ़्त कुत्ते-थीम वाली लॉजिक पहेली जिसमें आप हर रंग, पंक्ति और स्तंभ में एक पिल्ला रखते हैं, और कोई दो एक-दूसरे को नहीं छूते। यह Star Battle और Queens पहेली की ही शैली की है।</p>
+      <h3>WangDoKu कैसे खेलते हैं?</h3>
+      <p>किसी खाने को टैप करने पर वह खाली, क्रॉस और पिल्ला के बीच बदलता है। हर रंग क्षेत्र, पंक्ति और स्तंभ में ठीक एक पिल्ला रखें और कभी दो पिल्लों को छूने न दें (तिरछे भी नहीं)। सबसे आसान अगले कदम के लिए संकेत बटन दबाएँ।</p>
+      <h3>क्या WangDoKu, Pawdoku या Meowdoku जैसा है?</h3>
+      <p>हाँ — यह उसी शैली का मुफ़्त विकल्प है, पर कुत्ते-थीम वाला, स्मार्ट संकेतों, चार कठिनाइयों, साझा लिंक और 18 भाषाओं के साथ। WangDoKu एक स्वतंत्र खेल है और Pawdoku या Meowdoku से संबद्ध नहीं है।</p>
+      <h3>क्या यह मुफ़्त है? क्या खाता चाहिए?</h3>
+      <p>WangDoKu पूरी तरह मुफ़्त है, न खाता चाहिए और न डाउनलोड — यह फ़ोन या कंप्यूटर के किसी भी आधुनिक ब्राउज़र में चलता है।</p>
+    </article>
+  </footer>
+
+  <script src="/js/i18n.js"></script>
+  <script src="/js/solver.js"></script>
+  <script src="/js/difficulty.js"></script>
+  <script src="/js/generator.js"></script>
+  <script src="/js/game.js"></script>
+  <script src="/js/ai.js"></script>
+  <script src="/js/multiplayer.js"></script>
+  <script src="/js/main.js"></script>
+</body>
+</html>

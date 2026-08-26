@@ -6,6 +6,7 @@
   'use strict';
 
   const { Game, DOG, MARK, EMPTY } = window.PupdokuGame;
+  const MP = window.WangDoKuMultiplayer;
   const t = (k, p) => window.I18N.t(k, p);
   // 難度等級（UI）：入門用小盤面 6×6 + 最基本技巧；其餘 8×8，只由推理難度決定
   const LEVELS = [
@@ -20,6 +21,10 @@
   const levelOf = (p) => (p.n <= 6 ? 0 : (p.difficulty || 0) + 1);
   const track = (name, params) => {
     if (typeof window.gtag === 'function') window.gtag('event', name, params || {});
+  };
+  // 原生 App 會接收這些事件播放音效／觸覺回饋；瀏覽器版不受影響。
+  const nativeFeedback = (type, data) => {
+    window.dispatchEvent(new CustomEvent('wangdoku:feedback', { detail: { type, ...(data || {}) } }));
   };
 
   const el = {
@@ -73,6 +78,8 @@
   let aiPending = null, aiThinkBudget = 0; // 電腦決定好、正在「思考」還沒放到盤上的狗
   let vsStartTime = 0, vsClockId = null;   // 對戰計時（開賽倒數結束才開始）
   let vsCountingDown = false;              // 3/2/1 倒數中：擋玩家點擊、電腦也還沒動
+  let vsKind = 'ai';                       // 'ai' | 'online'
+  let onlineRoom = null, onlinePollId = null;
   // 點擊節奏：同一格連點要在 1 秒內，才會從 ❌ 進到 🐶（避免誤放狗）。單點=標 ❌、快速連點=放狗
   const DBL_TAP_MS = 1000;
   let lastTap = { key: null, time: 0 };
@@ -334,6 +341,7 @@
   function onCellClick(r, c, right) {
     if (mode === 'vs') { onVsClick(r, c, right); return; }
     if (!game.won) ensureTimer(); // 第一個動作開始計時
+    const before = game.grid[r][c];
     if (right) game.setDog(r, c);
     else {
       const quick = isQuickTap(r, c);
@@ -342,6 +350,9 @@
       else game.cycle(r, c);
     }
 
+    if (game.grid[r][c] !== before) {
+      nativeFeedback(game.grid[r][c] === DOG ? 'dog' : game.grid[r][c] === MARK ? 'mark' : 'tap');
+    }
     if (game.checkWin()) {
       render();
       onWin();
@@ -381,6 +392,7 @@
 
   // 過關慶祝：盤上狗狗一起蹦跳，畫面灑彩帶
   function celebrate() {
+    nativeFeedback('win');
     const dogs = [...el.board.querySelectorAll('.cell')].filter((c) => c.textContent === '🐶');
     dogs.forEach((c, i) => {
       c.style.setProperty('--cheer-delay', i * 55 + 'ms');
@@ -408,7 +420,8 @@
 
   function nextPuzzle() {
     el.win.classList.remove('show');
-    if (mode === 'vs') startVsMatch(); else newGame();
+    if (mode === 'vs' && vsKind === 'online') { exitVs(); openMatchPicker(); }
+    else if (mode === 'vs') startVsMatch('ai'); else newGame();
   }
 
   // ===== 1 vs 1 對戰 =====
@@ -466,7 +479,8 @@
     return out;
   }
 
-  function startVsMatch() {
+  function startVsMatch(kind) {
+    vsKind = kind || 'ai';
     mode = 'vs';
     stopTimer(); stopAiTimer(); stopVsClock();
     vsOver = false; myScore = 0; aiScore = 0; vsStartTime = 0;
@@ -513,7 +527,7 @@
   }
 
   function exitVs() {
-    stopAiTimer(); stopVsClock(); setAiThinking(false);
+    stopAiTimer(); stopVsClock(); stopOnlinePoll(); setAiThinking(false);
     mode = 'single'; vsOver = false; vsCountingDown = false; ownerAt = null; aiSolver = null; aiPending = null;
     const cd = document.getElementById('vs-countdown'); if (cd) cd.hidden = true;
     el.win.classList.remove('show');
@@ -533,18 +547,26 @@
     else if (before === MARK) game.grid[r][c] = quick ? DOG : EMPTY; // 慢速再點不放狗，改清空
     else game.grid[r][c] = EMPTY;
     if (game.grid[r][c] === DOG) {
+      if (vsKind === 'online') {
+        render();
+        submitOnlineMove(r, c, before);
+        return;
+      }
       if (game.solution[r] === c) { // 放對
         ownerAt.set(`${r},${c}`, 'me');
         aiSolver.commitExternal(r, c); // 同步給電腦大腦：這格被你占了
         myScore++;
+        nativeFeedback('dog');
         render(); updateVsScore();
         if (myScore >= VS_TARGET) { endVs('you'); return; }
         setStatus(() => t('vsGood', { you: myScore, ai: aiScore }), 'good');
       } else { // 放錯 → 立刻輸
+        nativeFeedback('error');
         render();
         endVs('wrong', { r, c });
       }
     } else {
+      if (game.grid[r][c] !== before) nativeFeedback(game.grid[r][c] === MARK ? 'mark' : 'tap');
       render(); // ❌ 或清空（你自己的輔助標記）
     }
   }
@@ -553,6 +575,7 @@
     game.grid[r][c] = DOG;
     ownerAt.set(`${r},${c}`, 'ai');
     aiScore++;
+    nativeFeedback('aiDog');
     render(); updateVsScore();
     const cell = el.board.querySelector(`.cell[data-r="${r}"][data-c="${c}"]`);
     if (cell) { void cell.offsetWidth; cell.classList.add('dog-pop'); }
@@ -594,6 +617,111 @@
     track('vs_end', { result: result, my_score: myScore, ai_score: aiScore });
     if (result === 'you') celebrate();
     setTimeout(() => el.win.classList.add('show'), result === 'you' ? 900 : 350);
+  }
+
+  // ===== Internet / Nearby 對戰（伺服器是裁判） =====
+  function setVsOpponent(label) {
+    const chip = document.querySelector('.vs-chip-ai small');
+    if (chip) chip.textContent = label;
+  }
+  function stopOnlinePoll() { if (onlinePollId) { clearInterval(onlinePollId); onlinePollId = null; } onlineRoom = null; }
+  function startOnlineShell() {
+    mode = 'vs'; vsKind = 'online';
+    stopTimer(); stopAiTimer(); stopVsClock(); stopOnlinePoll();
+    vsOver = false; myScore = 0; aiScore = 0; vsStartTime = 0; vsCountingDown = true;
+    ownerAt = new Map(); aiPending = null; aiThinkBudget = 0;
+    el.win.classList.remove('show'); clearShareParam(); setVsUI(true);
+    document.querySelectorAll('.mode-tab').forEach((x) => x.classList.toggle('is-active', x.dataset.mode === 'vs'));
+    setVsOpponent('Opponent'); updateVsScore(); updateVsClock();
+    el.board.innerHTML = '<div class="board-loading">🎲</div>';
+  }
+  function onlinePuzzle() {
+    let puzzle, forced;
+    for (let tries = 0; tries < 40; tries++) {
+      puzzle = window.PupdokuGenerator.generateByDifficulty(AI_N, AI_BUCKET);
+      forced = singleCellDogs(puzzle);
+      if (forced.length < VS_TARGET) break;
+    }
+    return puzzle;
+  }
+  async function createOnlineMatch(nearby) {
+    if (!MP) return;
+    closeMatchPicker(); startOnlineShell();
+    setStatus(nearby ? '📱 Creating nearby room…' : '🌐 Creating internet room…', 'hint');
+    try {
+      const room = await MP.create(onlinePuzzle());
+      enterOnlineRoom(room);
+      const link = (window.__WANGDOKU_PUBLIC_URL || location.origin + location.pathname).replace(/\/$/, '') + '/?room=' + room.code;
+      const message = nearby ? `📱 Nearby room: ${room.code}` : `🌐 Room: ${room.code}`;
+      setStatus(message + ' · share the code or link', 'hint');
+      if (nearby) showNearbyInvite(room.code, link, message);
+    } catch (err) { setStatus('Could not create room. Please try again.', 'bad'); exitVs(); }
+  }
+  async function joinOnlineMatch(code) {
+    if (!MP || !code) return;
+    closeMatchPicker(); startOnlineShell(); setStatus('🌐 Joining room…', 'hint');
+    try { enterOnlineRoom(await MP.join(code)); }
+    catch (err) { setStatus('Room not found, full, or already started.', 'bad'); exitVs(); }
+  }
+  function enterOnlineRoom(room) {
+    onlineRoom = room;
+    game = new Game({ ...room.puzzle, solution: Array(room.puzzle.n).fill(-1) });
+    ownerAt = new Map(); revealAnim = true; render();
+    applyOnlineRoom(room);
+    onlinePollId = setInterval(async () => {
+      if (!onlineRoom || !MP) return;
+      try { applyOnlineRoom(await MP.get(onlineRoom.code)); } catch (e) { setStatus('Reconnecting…', 'hint'); }
+    }, 700);
+  }
+  function applyOnlineRoom(room) {
+    if (!onlineRoom || room.code !== onlineRoom.code) return;
+    onlineRoom = room;
+    const meHost = room.host_id === MP.playerId;
+    myScore = meHost ? room.host_score : room.guest_score;
+    aiScore = meHost ? room.guest_score : room.host_score;
+    Object.entries(room.moves || {}).forEach(([key, owner]) => {
+      const [r, c] = key.split(',').map(Number);
+      game.grid[r][c] = DOG; ownerAt.set(key, owner === MP.playerId ? 'me' : 'ai');
+    });
+    updateVsScore(); render();
+    if (room.status === 'waiting') { vsCountingDown = true; setStatus('Share room code: ' + room.code, 'hint'); return; }
+    if (room.status === 'countdown') { vsCountingDown = true; setStatus('Opponent joined — get ready!', 'hint'); return; }
+    if (room.status === 'playing') {
+      vsCountingDown = false;
+      if (!vsClockId) { vsStartTime = new Date(room.started_at).getTime(); updateVsClock(); vsClockId = setInterval(updateVsClock, 1000); }
+      setStatus('First to 4 correct pups wins.', 'hint');
+      return;
+    }
+    if (room.status === 'finished' && !vsOver) endVs(room.winner_id === MP.playerId ? 'you' : 'ai');
+  }
+  async function submitOnlineMove(r, c, before) {
+    try { applyOnlineRoom(await MP.move(onlineRoom.code, r, c)); }
+    catch (err) {
+      game.grid[r][c] = before; render(); nativeFeedback('error');
+      setStatus('Move was not accepted. Try again.', 'bad');
+    }
+  }
+  function openMatchPicker() {
+    const box = document.getElementById('match-picker'); if (box) box.hidden = false;
+  }
+  function closeMatchPicker() {
+    const box = document.getElementById('match-picker'); if (box) box.hidden = true;
+  }
+  function showNearbyInvite(code, link, message) {
+    const box = document.getElementById('nearby-invite');
+    const qr = document.getElementById('invite-qr');
+    const text = document.getElementById('invite-code');
+    const share = document.getElementById('invite-share');
+    if (!box || !qr || !text) return;
+    // Only the public room link is sent to the QR renderer — never a player ID or answer.
+    qr.src = 'https://quickchart.io/qr?size=380&text=' + encodeURIComponent(link);
+    text.textContent = code;
+    box.hidden = false;
+    if (share) share.onclick = () => {
+      if (isNativeApp()) nativeFeedback('share', { url: link });
+      else if (navigator.share) navigator.share({ title: 'WangDoKu 1 vs 1', text: message, url: link }).catch(() => {});
+      else if (navigator.clipboard) navigator.clipboard.writeText(link);
+    };
   }
 
   // 事件綁定
@@ -640,6 +768,7 @@
     const h = game.hint();
     if (!h) { setStatus(() => t('statusAllPlaced'), 'good'); return; }
     hintsUsed++;
+    nativeFeedback('hint');
     track('hint_used', { difficulty: DIFF_NAME[currentLevel] });
     ensureTimer(); // 用提示也算開始動作
     const rkey = 'reason' + h.reasonKey.charAt(0).toUpperCase() + h.reasonKey.slice(1);
@@ -800,19 +929,43 @@
     b.addEventListener('click', () => {
       const m = b.dataset.mode;
       if (m === mode) return;
-      if (m === 'vs') startVsMatch(); else exitVs();
+      if (m === 'vs') openMatchPicker(); else exitVs();
     });
   });
   const vsRestartBtn = document.getElementById('vs-restart');
-  if (vsRestartBtn) vsRestartBtn.addEventListener('click', () => startVsMatch());
+  if (vsRestartBtn) vsRestartBtn.addEventListener('click', () => {
+    if (vsKind === 'online') { exitVs(); openMatchPicker(); } else startVsMatch('ai');
+  });
+  const matchPicker = document.getElementById('match-picker');
+  const matchCode = document.getElementById('match-code');
+  const matchMessage = document.getElementById('match-message');
+  const matchClose = document.getElementById('match-close');
+  if (matchClose) matchClose.addEventListener('click', closeMatchPicker);
+  if (matchPicker) matchPicker.addEventListener('click', (e) => { if (e.target === matchPicker) closeMatchPicker(); });
+  const inviteBox = document.getElementById('nearby-invite');
+  const inviteClose = document.getElementById('invite-close');
+  if (inviteClose) inviteClose.addEventListener('click', () => { if (inviteBox) inviteBox.hidden = true; });
+  if (inviteBox) inviteBox.addEventListener('click', (e) => { if (e.target === inviteBox) inviteBox.hidden = true; });
+  document.querySelectorAll('.match-choice').forEach((b) => b.addEventListener('click', () => {
+    if (b.dataset.match === 'ai') { closeMatchPicker(); startVsMatch('ai'); }
+    else createOnlineMatch(b.dataset.match === 'nearby');
+  }));
+  const matchJoin = document.getElementById('match-join');
+  if (matchJoin) matchJoin.addEventListener('click', () => joinOnlineMatch(matchCode && matchCode.value));
+  if (matchCode) matchCode.addEventListener('input', () => { matchCode.value = matchCode.value.toUpperCase().replace(/[^A-Z0-9]/g, ''); });
   el.winNext.addEventListener('click', nextPuzzle);
 
   el.shareBtn.addEventListener('click', async () => {
     if (!game) return;
     const code = encodePuzzle(game);
-    const url = location.origin + location.pathname + '?p=' + code;
+    const url = publicPuzzleURL(code);
     history.replaceState(null, '', '?p=' + code); // 網址列同步這題，重整也回得來
     track('share', { method: 'copy_link' });
+    if (isNativeApp()) {
+      nativeFeedback('share', { url });
+      setStatus('🔗 ✓', 'hint');
+      return;
+    }
     try {
       await navigator.clipboard.writeText(url);
       setStatus('🔗 ✓', 'hint');
@@ -823,9 +976,14 @@
 
   // 過關卡片：分享到 X / Facebook / 複製
   function shareData() {
-    const url = location.origin + location.pathname + '?p=' + encodePuzzle(game);
+    const url = publicPuzzleURL(encodePuzzle(game));
     const text = t('socialText', { time: fmt(lastElapsed), difficulty: diffLabel(currentLevel) });
     return { url, text };
+  }
+
+  function publicPuzzleURL(code) {
+    const base = window.__WANGDOKU_PUBLIC_URL || (location.origin + location.pathname);
+    return base.replace(/\/$/, '') + '/?p=' + code;
   }
   el.shareX.addEventListener('click', () => {
     const { url, text } = shareData();
@@ -897,7 +1055,8 @@
   }
 
   // PWA：註冊 Service Worker（離線）＋ 安裝到主畫面
-  if ('serviceWorker' in navigator) {
+  const isNativeApp = () => window.__WANGDOKU_NATIVE === true;
+  if (!isNativeApp() && 'serviceWorker' in navigator) {
     window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(() => { /* ignore */ }));
   }
   let deferredPrompt = null;
@@ -908,7 +1067,7 @@
   // 顯示「加到首頁」按鈕：可程式化安裝（Android/桌面 Chrome）或 iOS Safari（給指引）；已安裝則隱藏
   function refreshInstallBtn() {
     if (!installBtn) return;
-    installBtn.hidden = isStandalone() ? true : !(deferredPrompt || isIOS());
+    installBtn.hidden = isNativeApp() || isStandalone() ? true : !(deferredPrompt || isIOS());
   }
   window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault(); deferredPrompt = e; refreshInstallBtn();
@@ -928,6 +1087,7 @@
   function maybeShowInstall() {
     const box = document.getElementById('win-install');
     if (!box) return;
+    if (isNativeApp()) { box.hidden = true; return; }
     let done = null;
     try { done = localStorage.getItem('pupdoku_installPrompted'); } catch (e) { /* ignore */ }
     if (done || isStandalone()) { box.hidden = true; return; }
@@ -953,6 +1113,8 @@
   // 起始：偵測瀏覽器語言 → 首次教學＋同意 → 載入分享題或產生新題
   window.I18N.init();
   refreshInstallBtn(); // iOS Safari / 已安裝狀態，一開始就決定按鈕是否顯示
-  if (!loadFromURL()) newGame();
+  const roomParam = new URLSearchParams(location.search).get('room');
+  if (roomParam) joinOnlineMatch(roomParam);
+  else if (!loadFromURL()) newGame();
   initConsent();
 })();
