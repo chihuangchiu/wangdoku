@@ -2,6 +2,7 @@ import SwiftUI
 import WebKit
 
 struct WangDoKuWebView: UIViewRepresentable {
+    var roomCode: String?
     func makeCoordinator() -> Coordinator { Coordinator() }
 
     func makeUIView(context: Context) -> WKWebView {
@@ -28,9 +29,16 @@ struct WangDoKuWebView: UIViewRepresentable {
         return webView
     }
 
-    func updateUIView(_ uiView: WKWebView, context: Context) {}
+    func updateUIView(_ uiView: WKWebView, context: Context) {
+        guard let roomCode, roomCode != context.coordinator.lastRoomCode else { return }
+        context.coordinator.lastRoomCode = roomCode
+        context.coordinator.join(roomCode)
+    }
 
     final class Coordinator: NSObject, WKScriptMessageHandler, WKNavigationDelegate {
+        weak var webView: WKWebView?
+        var lastRoomCode: String?
+        private var pageLoaded = false
         func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
             guard message.name == "wangdoku", let body = message.body as? [String: Any], let type = body["type"] as? String else { return }
             DispatchQueue.main.async {
@@ -47,6 +55,19 @@ struct WangDoKuWebView: UIViewRepresentable {
                   let root = scene.windows.first(where: { $0.isKeyWindow })?.rootViewController else { return }
             let sheet = UIActivityViewController(activityItems: [url], applicationActivities: nil)
             root.present(sheet, animated: true)
+        }
+
+        func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+            self.webView = webView
+            pageLoaded = true
+            if let lastRoomCode { join(lastRoomCode) }
+        }
+
+        func join(_ roomCode: String) {
+            guard pageLoaded, let webView else { return }
+            guard let data = try? JSONSerialization.data(withJSONObject: roomCode),
+                  let json = String(data: data, encoding: .utf8) else { return }
+            webView.evaluateJavaScript("window.dispatchEvent(new CustomEvent('wangdoku:join-room', { detail: { room: \(json) } }));")
         }
     }
 

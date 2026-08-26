@@ -2,6 +2,7 @@ import SwiftUI
 
 struct ContentView: View {
     @State private var isReady = false
+    @State private var roomCode: String?
 
     var body: some View {
         ZStack {
@@ -12,7 +13,7 @@ struct ContentView: View {
             )
             .ignoresSafeArea()
 
-            WangDoKuWebView()
+            WangDoKuWebView(roomCode: roomCode)
                 .opacity(isReady ? 1 : 0)
 
             if !isReady {
@@ -36,6 +37,13 @@ struct ContentView: View {
         .task {
             try? await Task.sleep(for: .milliseconds(520))
             withAnimation(.easeOut(duration: 0.24)) { isReady = true }
+        }
+        .onOpenURL { url in
+            guard url.scheme?.lowercased() == "wangdoku",
+                  url.host?.lowercased() == "match",
+                  let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
+                  let room = components.queryItems?.first(where: { $0.name == "room" })?.value else { return }
+            roomCode = room.uppercased()
         }
     }
 }

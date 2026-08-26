@@ -651,7 +651,9 @@
     try {
       const room = await MP.create(onlinePuzzle());
       enterOnlineRoom(room);
-      const link = (window.__WANGDOKU_PUBLIC_URL || location.origin + location.pathname).replace(/\/$/, '') + '/?room=' + room.code;
+      const link = isNativeApp()
+        ? 'wangdoku://match?room=' + encodeURIComponent(room.code)
+        : (window.__WANGDOKU_PUBLIC_URL || location.origin + location.pathname).replace(/\/$/, '') + '/?room=' + room.code;
       const message = nearby ? `📱 Nearby room: ${room.code}` : `🌐 Room: ${room.code}`;
       setStatus(message + ' · share the code or link', 'hint');
       if (nearby) showNearbyInvite(room.code, link, message);
@@ -953,6 +955,10 @@
   const matchJoin = document.getElementById('match-join');
   if (matchJoin) matchJoin.addEventListener('click', () => joinOnlineMatch(matchCode && matchCode.value));
   if (matchCode) matchCode.addEventListener('input', () => { matchCode.value = matchCode.value.toUpperCase().replace(/[^A-Z0-9]/g, ''); });
+  window.addEventListener('wangdoku:join-room', (e) => {
+    const room = e.detail && e.detail.room;
+    if (room) joinOnlineMatch(room);
+  });
   el.winNext.addEventListener('click', nextPuzzle);
 
   el.shareBtn.addEventListener('click', async () => {

@@ -6,3 +6,7 @@
 
 # Build artifacts / archives
 *.zip
+
+# Xcode local UI state
+ios/WangDoKu/WangDoKu.xcodeproj/project.xcworkspace/
+ios/WangDoKu/WangDoKu.xcodeproj/xcuserdata/
